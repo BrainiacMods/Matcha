@@ -80,7 +80,7 @@ local function drawCriminals()
         if not m:IsA("Model") then continue end
         if not m.Parent then continue end
         if m.Name==localplayer.Name then continue end
-        if m:GetAttribute("LivesGiven") ~= 1 then continue end
+        local lg = m:GetAttribute("LivesGiven") if lg ~= 1 and lg ~= 2 then continue end
         local root=m:FindFirstChild("HumanoidRootPart")
         if not root then continue end
         local pos,vis=WorldToScreen(root.Position)
