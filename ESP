@@ -1,26 +1,24 @@
--- This code is half skidded from @l3afin script on Matcha Discord and partly coded by claude, it was for a friend, but i'd figure i'd post it
+--skidded script and AI
+local players = game:GetService("Players")
+repeat task.wait() until players.LocalPlayer
+local localplayer = players.LocalPlayer
+
 local ph={}
 local sh={}
 local ws=workspace
-local players=game:GetService("Players")
-local localplayer=players.LocalPlayer
 local boxes={}
 local lastupdate=0
-
-local function worldtoscreen(pos)
-    return WorldToScreen(pos)
-end
 
 local function getbbox(char)
     local min_x,min_y=math.huge,math.huge
     local max_x,max_y=-math.huge,-math.huge
     local found=false
     for _,part in pairs(char:GetChildren()) do
-        if part.ClassName:lower():find("part") then
+        if part:IsA("BasePart") then
             local pos=part.Position
             local sz=part.Size/2
             for _,offset in pairs({Vector3.new(-sz.X,-sz.Y,-sz.Z),Vector3.new(sz.X,sz.Y,sz.Z)}) do
-                local screen,vis=worldtoscreen(pos+offset)
+                local screen,vis=WorldToScreen(pos+offset)
                 if vis then
                     found=true
                     min_x=math.min(min_x,screen.x)
@@ -75,44 +73,63 @@ local function remove_esp(plr)
 end
 
 local function drawCriminals()
-    for i=#ph,1,-1 do ph[i].t:Remove() table.remove(ph,i) end
+    local active={}
     for _,m in ipairs(ws:GetChildren()) do
-        if not m:IsA("Model") then continue end
-        if not m.Parent then continue end
+        if not m:IsA("Model") or not m.Parent then continue end
         if m.Name==localplayer.Name then continue end
-        local lg = m:GetAttribute("LivesGiven") if lg ~= 1 and lg ~= 2 then continue end
+        local lg=m:GetAttribute("LivesGiven") if lg~=1 and lg~=2 then continue end
         local root=m:FindFirstChild("HumanoidRootPart")
         if not root then continue end
-        local pos,vis=WorldToScreen(root.Position)
-        local txt=Drawing.new("Text")
-        txt.Text=m.Name.." [CRIMINAL]"
-        txt.Center=true txt.Outline=true
-        txt.Color=Color3.fromRGB(0,255,0)
-        txt.Size=14 txt.Visible=vis
-        if vis then txt.Position=pos-Vector2.new(0,15) end
-        table.insert(ph,{m=m,t=txt})
+        local ok,pos,vis=pcall(WorldToScreen,root.Position)
+        if not ok then continue end
+        if not ph[m] then
+            local txt=Drawing.new("Text")
+            txt.Text=m.Name.." [CRIMINAL]"
+            txt.Center=true txt.Outline=true
+            txt.Color=Color3.fromRGB(0,255,0)
+            txt.Size=14
+            ph[m]={t=txt}
+        end
+        ph[m].t.Visible=vis
+        if vis then ph[m].t.Position=pos-Vector2.new(0,15) end
+        active[m]=true
+    end
+    for m,e in pairs(ph) do
+        if not active[m] then
+            e.t:Remove()
+            ph[m]=nil
+        end
     end
 end
 
 local function drawSheriffs()
-    for i=#sh,1,-1 do sh[i].t:Remove() table.remove(sh,i) end
+    local active={}
     for _,plr in ipairs(players:GetPlayers()) do
-        if plr==localplayer then continue end
-        if plr.Name==localplayer.Name then continue end
-        if not Sheriff(plr) then continue end
-        if not plr.Character then continue end
+        if plr==localplayer or plr.Name==localplayer.Name then continue end
+        if not Sheriff(plr) or not plr.Character then continue end
         local root=plr.Character:FindFirstChild("HumanoidRootPart")
         if not root then continue end
         local hum=plr.Character:FindFirstChild("Humanoid")
         if not hum or hum.Health<=0 then continue end
-        local pos,vis=WorldToScreen(root.Position)
-        local txt=Drawing.new("Text")
-        txt.Text=plr.Name.." [SHERIFF]"
-        txt.Center=true txt.Outline=true
-        txt.Color=Color3.fromRGB(255,0,0)
-        txt.Size=14 txt.Visible=vis
-        if vis then txt.Position=pos-Vector2.new(0,15) end
-        table.insert(sh,{p=root,t=txt})
+        local ok,pos,vis=pcall(WorldToScreen,root.Position)
+        if not ok then continue end
+        if not sh[plr] then
+            local txt=Drawing.new("Text")
+            txt.Text=plr.Name.." [SHERIFF]"
+            txt.Center=true txt.Outline=true
+            txt.Color=Color3.fromRGB(255,0,0)
+            txt.Size=14
+            sh[plr]={t=txt}
+        end
+        sh[plr].t.Visible=vis
+        if vis then sh[plr].t.Position=pos-Vector2.new(0,15) end
+        active[plr]=true
+    end
+    for plr,e in pairs(sh) do
+        if not active[plr] then
+            e.t:Remove()
+            sh[plr]=nil
+        end
     end
 end
 
@@ -120,14 +137,13 @@ task.spawn(function()
     while true do
         drawCriminals()
         drawSheriffs()
-        task.wait(0.03)
+        task.wait(0.05)
     end
 end)
 
 while true do
     local time=os.clock()
     if time-lastupdate>1 then
-        if boxes[localplayer] then remove_esp(localplayer) end
         for plr,_ in pairs(boxes) do remove_esp(plr) end
         for _,plr in pairs(players:GetChildren()) do
             if plr.ClassName=="Player" and plr~=localplayer and plr.Name~=localplayer.Name then
@@ -147,8 +163,6 @@ while true do
             if hum and hum.Health>0 then
                 local ok,x,y,w,h=getbbox(plr.Character)
                 if ok then
-                    box.main.Color=Color3.fromRGB(255,255,255)
-                    box.name.Color=Color3.fromRGB(255,255,255)
                     box.outline1.Position=Vector2.new(x+1,y+1)
                     box.outline1.Size=Vector2.new(w-2,h-2)
                     box.outline1.Visible=true
@@ -164,5 +178,5 @@ while true do
             end
         end
     end
-    wait(0.007)
+    task.wait(0.007)
 end
