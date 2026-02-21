@@ -1,0 +1,67 @@
+local esp = {}
+
+local folders = {
+    {parent = "QuickEvent",       name = "HiddenHongbaos_Lobby",            label = "Lobby"},
+    {parent = "Prison",           name = "HiddenHongbaos_Prison",           label = "Prison"},
+    {parent = "Hospital",         name = "HiddenHongbaos_Hospital",         label = "Hospital"},
+    {parent = "Office",           name = "HiddenHongbaos_Office",           label = "Office"},
+    {parent = "Hotel",            name = "HiddenHongbaos_Hotel",            label = "Hotel"},
+    {parent = "Aquarium",         name = "HiddenHongbaos_Aquarium",         label = "Aquarium"},
+    {parent = "CrazyConstruction",name = "HiddenHongbaos_CrazyConstruction",label = "CrazyConstruction"},
+    {parent = "WesternTown",      name = "HiddenHongbaos_WesternTown",      label = "WesternTown"},
+    {parent = "PirateCove",       name = "HiddenHongbaos_PirateCove",       label = "PirateCove"},
+    {parent = "RubyRiches",       name = "HiddenHongbaos_RubyRiches",       label = "RubyRiches"},
+    {parent = "ShoppingMall",     name = "HiddenHongbaos_ShoppingMall",     label = "ShoppingMall"},
+    {parent = "RailYard",         name = "HiddenHongbaos_RailYard",         label = "RailYard"},
+    {parent = "MoonBase",         name = "HiddenHongbaos_MoonBase",         label = "MoonBase"},
+}
+
+local function newText(text, color)
+    local txt = Drawing.new("Text")
+    txt.Text = text
+    txt.Center = true
+    txt.Outline = true
+    txt.Size = 14
+    txt.Color = color
+    txt.Visible = false
+    return txt
+end
+
+print("[Hongbao ESP] Loaded!")
+
+while true do
+    local active = {}
+
+    for _, f in ipairs(folders) do
+        local ok, err = pcall(function()
+            local parentFolder = workspace:FindFirstChild(f.parent)
+            if not parentFolder then return end
+            local folder = parentFolder:FindFirstChild(f.name)
+            if not folder then return end
+
+            for _, item in ipairs(folder:GetDescendants()) do
+                if not item:IsA("BasePart") or not item.Parent then continue end
+                local ok2, pos = pcall(function() return item.Position end)
+                if not ok2 then continue end
+                local ok3, screen, vis = pcall(WorldToScreen, pos)
+                if not ok3 or not screen then continue end
+                if not esp[item] then
+                    esp[item] = newText("[" .. f.label .. "] " .. item.Name, Color3.fromRGB(255, 215, 0))
+                end
+                esp[item].Visible = vis
+                if vis then esp[item].Position = screen - Vector2.new(0, 15) end
+                active[item] = true
+            end
+        end)
+        if not ok then warn("[Hongbao ESP] Error on " .. f.label .. ": " .. tostring(err)) end
+    end
+
+    for item, txt in pairs(esp) do
+        if not active[item] then
+            txt:Remove()
+            esp[item] = nil
+        end
+    end
+
+    task.wait(0.1)
+end
