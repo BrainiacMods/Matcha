@@ -1697,32 +1697,34 @@ local function drawPlayerESP()
     end
 end
 
-local function drawZombieSpawnESP()
-    local spawnFolder = workspace:FindFirstChild("ZombieSpawns")
+local function drawZombieESP()
+    local zombieFolder = workspace:FindFirstChild("Zombies")
     local active = {}
 
-    if settings.zombieSpawnESP and spawnFolder then
-        for _, spawn in ipairs(spawnFolder:GetChildren()) do
-            local part = spawn:FindFirstChild("Spawn Location") or (spawn:IsA("BasePart") and spawn) or nil
-            if not part or not part:IsA("BasePart") then continue end
-            local ok, pos, vis = pcall(WorldToScreen, part.Position)
+    if settings.zombieESP and zombieFolder then
+        for _, m in ipairs(zombieFolder:GetChildren()) do
+            if not m:IsA("Model") then continue end
+            if not m.Parent then continue end
+            local root = getRoot(m)
+            if not root or not root.Parent then continue end
+            local ok, pos, vis = pcall(WorldToScreen, root.Position)
             if not ok then continue end
 
-            if not zombieSpawnESP[part] then
-                zombieSpawnESP[part] = { t = newText("[Z-SPAWN]", Color3.fromRGB(255, 165, 0)) }
+            if not zombieESP[m] then
+                zombieESP[m] = { t = newText("Zombie", Color3.fromRGB(0, 255, 0)) }
             end
 
-            local e = zombieSpawnESP[part]
+            local e = zombieESP[m]
             e.t.Visible = vis
             if vis then e.t.Position = pos - Vector2.new(0, 15) end
-            active[part] = true
+            active[m] = true
         end
     end
 
-    for part, e in pairs(zombieSpawnESP) do
-        if not active[part] then
+    for m, e in pairs(zombieESP) do
+        if not active[m] then
             e.t:Remove()
-            zombieSpawnESP[part] = nil
+            zombieESP[m] = nil
         end
     end
 end
