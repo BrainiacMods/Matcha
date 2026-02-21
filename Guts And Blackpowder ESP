@@ -647,7 +647,6 @@ do
 
             local theme = newValue[1]
             if theme == themes[1] then
-                -- default
                 themingAccentColor:Set(Color3.fromRGB(0, 128, 255))
                 themingBodyColor:Set(Color3.fromRGB(5, 5, 5))
                 themingTextColor:Set(Color3.fromRGB(255, 255, 255))
@@ -658,7 +657,6 @@ do
                 themingSurface0Color:Set(Color3.fromRGB(24, 24, 24))
                 themingCrustColor:Set(Color3.fromRGB(0, 0, 0))
             elseif theme == themes[2] then
-                -- gamesense
                 themingAccentColor:Set(Color3.fromRGB(114, 178, 21))
                 themingBodyColor:Set(Color3.fromRGB(0, 0, 0))
                 themingTextColor:Set(Color3.fromRGB(144, 144, 144))
@@ -669,7 +667,6 @@ do
                 themingSurface0Color:Set(Color3.fromRGB(26, 26, 26))
                 themingCrustColor:Set(Color3.fromRGB(0, 0, 0))
             elseif theme == themes[3] then
-                -- bitchbot
                 themingAccentColor:Set(Color3.fromRGB(120, 85, 147))
                 themingBodyColor:Set(Color3.fromRGB(31, 31, 31))
                 themingTextColor:Set(Color3.fromRGB(202, 201, 201))
@@ -739,7 +736,6 @@ do
     function UILib:Step()
         local menuTitle = self._custom_title_enabled and self._custom_title or self.title
 
-        -- input processing
         setrobloxinput(not self._menu_open)
         for keycode, inputData in pairs(self._inputs) do
             local keycodeId = inputData.id
@@ -768,7 +764,6 @@ do
             self._menu_toggled_at = os.clock()
         end
 
-        -- draw watermark
         local watermarkPos = Vector2.new(20, 20)
         local watermarkSize = self:_GetTextBounds(menuTitle) + Vector2.new(self._padding * 2, self._padding * 2)
         if self._watermark_enabled then
@@ -781,7 +776,6 @@ do
             self:_UndrawStartsWith('watermark_')
         end
 
-        -- ... and notifications
         local notificationsOrigin = watermarkPos + (self._watermark_enabled and Vector2.new(0, watermarkSize.y + self._padding) or Vector2.new(0, 0))
         local totalNotificationsHeight = 0
         for notificationIter, notification in ipairs(self._notifications) do
@@ -813,7 +807,6 @@ do
         end
 
         if self._menu_open then
-            -- drag the menu
             if mouseHeld and self._menu_drag then
                 local mousePos = self:_GetMousePos()
                 self.x = mousePos.x - self._menu_drag.x
@@ -822,7 +815,6 @@ do
                 self._menu_drag = nil
             end
 
-            -- draw the dropdown
             local dropdown = self._active_dropdown
             if dropdown then
                 local dropdownFade =  1 - (dropdown._spawned_at - (os.clock() - 0.25)) / 0.25
@@ -1470,7 +1462,6 @@ do
             self:_RemoveDropdown()
         end
 
-        -- fade the menu
         local menuFade =  1 - (self._menu_toggled_at - (os.clock() - 0.25)) / 0.25
         if menuFade < 1.1 then
             self:_SetOpacityStartsWith('menu_', math.abs((self._menu_open and 0 or 1) - clamp(menuFade, 0, 1)))
@@ -1544,7 +1535,6 @@ local playerESP = {}
 local players = game:GetService("Players")
 local localplayer = players.LocalPlayer
 
--- Settings
 local settings = {
     zombieESP = true,
     playerESP = true,
@@ -1552,7 +1542,6 @@ local settings = {
 
 print("[ESP] Script loaded!")
 
--- UI Setup
 UILib:SetMenuTitle("ESP Menu")
 UILib:SetMenuSize(Vector2.new(400, 480))
 UILib:CenterMenu()
@@ -1580,10 +1569,111 @@ espSection:Toggle("Player ESP", settings.playerESP, function(val)
     end
 end)
 
+local zombieESP = {}
+local playerESP = {}
+local zombieSpawnESP = {}
+local playerSpawnESP = {}
+local players = game:GetService("Players")
+local localplayer = players.LocalPlayer
+
+local settings = {
+    zombieESP = true,
+    playerESP = true,
+    zombieSpawnESP = true,
+    playerSpawnESP = true,
+}
+
+UILib:SetMenuTitle("ESP Menu")
+UILib:SetMenuSize(Vector2.new(400, 480))
+UILib:CenterMenu()
+
+local espTab = UILib:Tab("ESP")
+local espSection = espTab:Section("Visuals")
+
+espSection:Toggle("Zombie ESP", settings.zombieESP, function(val)
+    settings.zombieESP = val
+    if not val then
+        for i = #zombieESP, 1, -1 do zombieESP[i].t:Remove() table.remove(zombieESP, i) end
+    end
+end)
+
+espSection:Toggle("Player ESP", settings.playerESP, function(val)
+    settings.playerESP = val
+    if not val then
+        for i = #playerESP, 1, -1 do playerESP[i].t:Remove() table.remove(playerESP, i) end
+    end
+end)
+
+espSection:Toggle("Zombie Spawn ESP", settings.zombieSpawnESP, function(val)
+    settings.zombieSpawnESP = val
+    if not val then
+        for i = #zombieSpawnESP, 1, -1 do zombieSpawnESP[i].t:Remove() table.remove(zombieSpawnESP, i) end
+    end
+end)
+
+espSection:Toggle("Player Spawn ESP", settings.playerSpawnESP, function(val)
+    settings.playerSpawnESP = val
+    if not val then
+        for i = #playerSpawnESP, 1, -1 do playerSpawnESP[i].t:Remove() table.remove(playerSpawnESP, i) end
+    end
+end)
+
+local zombieESP = {}
+local playerESP = {}
+local zombieSpawnESP = {}
+local players = game:GetService("Players")
+local localplayer = players.LocalPlayer
+
+local settings = {
+    zombieESP = true,
+    playerESP = true,
+    zombieSpawnESP = true,
+}
+
+
+local zombieESP = {}
+local playerESP = {}
+local zombieSpawnESP = {}
+local players = game:GetService("Players")
+local localplayer = players.LocalPlayer
+
+local settings = {
+    zombieESP = true,
+    playerESP = true,
+    zombieSpawnESP = true,
+}
+
+UILib:SetMenuTitle("ESP Menu")
+UILib:SetMenuSize(Vector2.new(400, 480))
+UILib:CenterMenu()
+
+local espTab = UILib:Tab("ESP")
+local espSection = espTab:Section("Visuals")
+
+espSection:Toggle("Zombie ESP", settings.zombieESP, function(val)
+    settings.zombieESP = val
+    if not val then
+        for i = #zombieESP, 1, -1 do zombieESP[i].t:Remove() table.remove(zombieESP, i) end
+    end
+end)
+
+espSection:Toggle("Player ESP", settings.playerESP, function(val)
+    settings.playerESP = val
+    if not val then
+        for i = #playerESP, 1, -1 do playerESP[i].t:Remove() table.remove(playerESP, i) end
+    end
+end)
+
+espSection:Toggle("Zombie Spawn ESP", settings.zombieSpawnESP, function(val)
+    settings.zombieSpawnESP = val
+    if not val then
+        for i = #zombieSpawnESP, 1, -1 do zombieSpawnESP[i].t:Remove() table.remove(zombieSpawnESP, i) end
+    end
+end)
+
 UILib:CreateSettingsTab()
 UILib:Notification("ESP Loaded! Press F1 to toggle menu", 6)
 
--- ESP Functions
 local function getRoot(model)
     local p = model:FindFirstChild("HumanoidRootPart")
     if p and p:IsA("BasePart") then return p end
@@ -1603,27 +1693,20 @@ end
 local function drawZombieESP()
     clearESP(zombieESP)
     if not settings.zombieESP then return end
-
     local zombieFolder = workspace:FindFirstChild("Zombies")
     if not zombieFolder then return end
-
     for _, m in ipairs(zombieFolder:GetChildren()) do
         if not m:IsA("Model") then continue end
         local root = getRoot(m)
         if not root then continue end
-
         local ok, pos, vis = pcall(WorldToScreen, root.Position)
         if not ok then continue end
-
         local txt = Drawing.new("Text")
         txt.Text = "Zombie"
-        txt.Center = true
-        txt.Outline = true
-        txt.Size = 14
-        txt.Color = Color3.fromRGB(0, 255, 0)
+        txt.Center = true txt.Outline = true
+        txt.Size = 14 txt.Color = Color3.fromRGB(0, 255, 0)
         txt.Visible = vis
         if vis then txt.Position = pos - Vector2.new(0, 15) end
-
         table.insert(zombieESP, { m = m, t = txt })
     end
 end
@@ -1631,36 +1714,50 @@ end
 local function drawPlayerESP()
     clearESP(playerESP)
     if not settings.playerESP then return end
-
     for _, plr in ipairs(players:GetPlayers()) do
-        if plr == localplayer or not plr.Character then continue end
-
+        if plr == localplayer then continue end
+        if plr.Name == localplayer.Name then continue end
+        if not plr.Character then continue end
         local root = plr.Character:FindFirstChild("HumanoidRootPart")
         if not root then continue end
-
         local hum = plr.Character:FindFirstChild("Humanoid")
         if not hum or hum.Health <= 0 then continue end
-
         local ok, pos, vis = pcall(WorldToScreen, root.Position)
         if not ok then continue end
-
         local txt = Drawing.new("Text")
         txt.Text = plr.Name
-        txt.Center = true
-        txt.Outline = true
-        txt.Size = 14
-        txt.Color = Color3.fromRGB(255, 255, 255)
+        txt.Center = true txt.Outline = true
+        txt.Size = 14 txt.Color = Color3.fromRGB(255, 255, 255)
         txt.Visible = vis
         if vis then txt.Position = pos - Vector2.new(0, 15) end
-
         table.insert(playerESP, { p = plr, t = txt })
     end
 end
 
--- Main Loop
+local function drawZombieSpawnESP()
+    clearESP(zombieSpawnESP)
+    if not settings.zombieSpawnESP then return end
+    local spawnFolder = workspace:FindFirstChild("ZombieSpawns")
+    if not spawnFolder then return end
+    for _, spawn in ipairs(spawnFolder:GetChildren()) do
+        local part = spawn:FindFirstChild("Spawn Location") or (spawn:IsA("BasePart") and spawn) or nil
+        if not part or not part:IsA("BasePart") then continue end
+        local ok, pos, vis = pcall(WorldToScreen, part.Position)
+        if not ok then continue end
+        local txt = Drawing.new("Text")
+        txt.Text = "[Z-SPAWN]"
+        txt.Center = true txt.Outline = true
+        txt.Size = 14 txt.Color = Color3.fromRGB(255, 165, 0)
+        txt.Visible = vis
+        if vis then txt.Position = pos - Vector2.new(0, 15) end
+        table.insert(zombieSpawnESP, { p = part, t = txt })
+    end
+end
+
 while true do
     drawZombieESP()
     drawPlayerESP()
+    drawZombieSpawnESP()
     UILib:Step()
     task.wait(0.03)
 end
