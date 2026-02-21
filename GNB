@@ -1732,5 +1732,5 @@ while true do
     drawPlayerESP()
     drawZombieSpawnESP()
     UILib:Step()
-    task.wait(0.03)
+    task.wait(0.007)
 end
