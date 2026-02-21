@@ -1635,26 +1635,22 @@ end
 local function drawZombieESP()
     local zombieFolder = workspace:FindFirstChild("Zombies")
     local active = {}
-
     if settings.zombieESP and zombieFolder then
         for _, m in ipairs(zombieFolder:GetChildren()) do
-            if not m:IsA("Model") then continue end
+            if not m:IsA("Model") or not m.Parent then continue end
             local root = getRoot(m)
-            if not root then continue end
+            if not root or not root.Parent then continue end
             local ok, pos, vis = pcall(WorldToScreen, root.Position)
             if not ok then continue end
-
             if not zombieESP[m] then
                 zombieESP[m] = { t = newText("Zombie", Color3.fromRGB(0, 255, 0)) }
             end
-
             local e = zombieESP[m]
             e.t.Visible = vis
             if vis then e.t.Position = pos - Vector2.new(0, 15) end
             active[m] = true
         end
     end
-
     for m, e in pairs(zombieESP) do
         if not active[m] then
             e.t:Remove()
@@ -1665,7 +1661,6 @@ end
 
 local function drawPlayerESP()
     local active = {}
-
     if settings.playerESP then
         for _, plr in ipairs(players:GetPlayers()) do
             if plr == localplayer then continue end
@@ -1677,18 +1672,15 @@ local function drawPlayerESP()
             if not hum or hum.Health <= 0 then continue end
             local ok, pos, vis = pcall(WorldToScreen, root.Position)
             if not ok then continue end
-
             if not playerESP[plr] then
                 playerESP[plr] = { t = newText(plr.Name, Color3.fromRGB(255, 255, 255)) }
             end
-
             local e = playerESP[plr]
             e.t.Visible = vis
             if vis then e.t.Position = pos - Vector2.new(0, 15) end
             active[plr] = true
         end
     end
-
     for plr, e in pairs(playerESP) do
         if not active[plr] then
             e.t:Remove()
@@ -1697,42 +1689,43 @@ local function drawPlayerESP()
     end
 end
 
-local function drawZombieESP()
-    local zombieFolder = workspace:FindFirstChild("Zombies")
+local function drawZombieSpawnESP()
+    local spawnFolder = workspace:FindFirstChild("ZombieSpawns")
     local active = {}
-
-    if settings.zombieESP and zombieFolder then
-        for _, m in ipairs(zombieFolder:GetChildren()) do
-            if not m:IsA("Model") then continue end
-            if not m.Parent then continue end
-            local root = getRoot(m)
-            if not root or not root.Parent then continue end
-            local ok, pos, vis = pcall(WorldToScreen, root.Position)
+    if settings.zombieSpawnESP and spawnFolder then
+        for _, spawn in ipairs(spawnFolder:GetChildren()) do
+            local part = spawn:FindFirstChild("Spawn Location") or (spawn:IsA("BasePart") and spawn) or nil
+            if not part or not part:IsA("BasePart") then continue end
+            local ok, pos, vis = pcall(WorldToScreen, part.Position)
             if not ok then continue end
-
-            if not zombieESP[m] then
-                zombieESP[m] = { t = newText("Zombie", Color3.fromRGB(0, 255, 0)) }
+            if not zombieSpawnESP[part] then
+                zombieSpawnESP[part] = { t = newText("[Z-SPAWN]", Color3.fromRGB(255, 165, 0)) }
             end
-
-            local e = zombieESP[m]
+            local e = zombieSpawnESP[part]
             e.t.Visible = vis
             if vis then e.t.Position = pos - Vector2.new(0, 15) end
-            active[m] = true
+            active[part] = true
         end
     end
-
-    for m, e in pairs(zombieESP) do
-        if not active[m] then
+    for part, e in pairs(zombieSpawnESP) do
+        if not active[part] then
             e.t:Remove()
-            zombieESP[m] = nil
+            zombieSpawnESP[part] = nil
         end
     end
 end
 
+local spawnTick = 0
 while true do
     drawZombieESP()
     drawPlayerESP()
-    drawZombieSpawnESP()
+
+    -- only update spawns every 2 seconds since they dont move
+    if os.clock() - spawnTick > 2 then
+        drawZombieSpawnESP()
+        spawnTick = os.clock()
+    end
+
     UILib:Step()
-    task.wait(0.007)
+    task.wait(0.05)
 end
