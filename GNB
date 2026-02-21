@@ -1572,68 +1572,6 @@ end)
 local zombieESP = {}
 local playerESP = {}
 local zombieSpawnESP = {}
-local playerSpawnESP = {}
-local players = game:GetService("Players")
-local localplayer = players.LocalPlayer
-
-local settings = {
-    zombieESP = true,
-    playerESP = true,
-    zombieSpawnESP = true,
-    playerSpawnESP = true,
-}
-
-UILib:SetMenuTitle("ESP Menu")
-UILib:SetMenuSize(Vector2.new(400, 480))
-UILib:CenterMenu()
-
-local espTab = UILib:Tab("ESP")
-local espSection = espTab:Section("Visuals")
-
-espSection:Toggle("Zombie ESP", settings.zombieESP, function(val)
-    settings.zombieESP = val
-    if not val then
-        for i = #zombieESP, 1, -1 do zombieESP[i].t:Remove() table.remove(zombieESP, i) end
-    end
-end)
-
-espSection:Toggle("Player ESP", settings.playerESP, function(val)
-    settings.playerESP = val
-    if not val then
-        for i = #playerESP, 1, -1 do playerESP[i].t:Remove() table.remove(playerESP, i) end
-    end
-end)
-
-espSection:Toggle("Zombie Spawn ESP", settings.zombieSpawnESP, function(val)
-    settings.zombieSpawnESP = val
-    if not val then
-        for i = #zombieSpawnESP, 1, -1 do zombieSpawnESP[i].t:Remove() table.remove(zombieSpawnESP, i) end
-    end
-end)
-
-espSection:Toggle("Player Spawn ESP", settings.playerSpawnESP, function(val)
-    settings.playerSpawnESP = val
-    if not val then
-        for i = #playerSpawnESP, 1, -1 do playerSpawnESP[i].t:Remove() table.remove(playerSpawnESP, i) end
-    end
-end)
-
-local zombieESP = {}
-local playerESP = {}
-local zombieSpawnESP = {}
-local players = game:GetService("Players")
-local localplayer = players.LocalPlayer
-
-local settings = {
-    zombieESP = true,
-    playerESP = true,
-    zombieSpawnESP = true,
-}
-
-
-local zombieESP = {}
-local playerESP = {}
-local zombieSpawnESP = {}
 local players = game:GetService("Players")
 local localplayer = players.LocalPlayer
 
@@ -1653,21 +1591,21 @@ local espSection = espTab:Section("Visuals")
 espSection:Toggle("Zombie ESP", settings.zombieESP, function(val)
     settings.zombieESP = val
     if not val then
-        for i = #zombieESP, 1, -1 do zombieESP[i].t:Remove() table.remove(zombieESP, i) end
+        for _, e in pairs(zombieESP) do e.t.Visible = false end
     end
 end)
 
 espSection:Toggle("Player ESP", settings.playerESP, function(val)
     settings.playerESP = val
     if not val then
-        for i = #playerESP, 1, -1 do playerESP[i].t:Remove() table.remove(playerESP, i) end
+        for _, e in pairs(playerESP) do e.t.Visible = false end
     end
 end)
 
 espSection:Toggle("Zombie Spawn ESP", settings.zombieSpawnESP, function(val)
     settings.zombieSpawnESP = val
     if not val then
-        for i = #zombieSpawnESP, 1, -1 do zombieSpawnESP[i].t:Remove() table.remove(zombieSpawnESP, i) end
+        for _, e in pairs(zombieSpawnESP) do e.t.Visible = false end
     end
 end)
 
@@ -1683,74 +1621,109 @@ local function getRoot(model)
     return nil
 end
 
-local function clearESP(tbl)
-    for i = #tbl, 1, -1 do
-        tbl[i].t:Remove()
-        table.remove(tbl, i)
-    end
+local function newText(text, color)
+    local txt = Drawing.new("Text")
+    txt.Text = text
+    txt.Center = true
+    txt.Outline = true
+    txt.Size = 14
+    txt.Color = color
+    txt.Visible = false
+    return txt
 end
 
 local function drawZombieESP()
-    clearESP(zombieESP)
-    if not settings.zombieESP then return end
     local zombieFolder = workspace:FindFirstChild("Zombies")
-    if not zombieFolder then return end
-    for _, m in ipairs(zombieFolder:GetChildren()) do
-        if not m:IsA("Model") then continue end
-        local root = getRoot(m)
-        if not root then continue end
-        local ok, pos, vis = pcall(WorldToScreen, root.Position)
-        if not ok then continue end
-        local txt = Drawing.new("Text")
-        txt.Text = "Zombie"
-        txt.Center = true txt.Outline = true
-        txt.Size = 14 txt.Color = Color3.fromRGB(0, 255, 0)
-        txt.Visible = vis
-        if vis then txt.Position = pos - Vector2.new(0, 15) end
-        table.insert(zombieESP, { m = m, t = txt })
+    local active = {}
+
+    if settings.zombieESP and zombieFolder then
+        for _, m in ipairs(zombieFolder:GetChildren()) do
+            if not m:IsA("Model") then continue end
+            local root = getRoot(m)
+            if not root then continue end
+            local ok, pos, vis = pcall(WorldToScreen, root.Position)
+            if not ok then continue end
+
+            if not zombieESP[m] then
+                zombieESP[m] = { t = newText("Zombie", Color3.fromRGB(0, 255, 0)) }
+            end
+
+            local e = zombieESP[m]
+            e.t.Visible = vis
+            if vis then e.t.Position = pos - Vector2.new(0, 15) end
+            active[m] = true
+        end
+    end
+
+    for m, e in pairs(zombieESP) do
+        if not active[m] then
+            e.t:Remove()
+            zombieESP[m] = nil
+        end
     end
 end
 
 local function drawPlayerESP()
-    clearESP(playerESP)
-    if not settings.playerESP then return end
-    for _, plr in ipairs(players:GetPlayers()) do
-        if plr == localplayer then continue end
-        if plr.Name == localplayer.Name then continue end
-        if not plr.Character then continue end
-        local root = plr.Character:FindFirstChild("HumanoidRootPart")
-        if not root then continue end
-        local hum = plr.Character:FindFirstChild("Humanoid")
-        if not hum or hum.Health <= 0 then continue end
-        local ok, pos, vis = pcall(WorldToScreen, root.Position)
-        if not ok then continue end
-        local txt = Drawing.new("Text")
-        txt.Text = plr.Name
-        txt.Center = true txt.Outline = true
-        txt.Size = 14 txt.Color = Color3.fromRGB(255, 255, 255)
-        txt.Visible = vis
-        if vis then txt.Position = pos - Vector2.new(0, 15) end
-        table.insert(playerESP, { p = plr, t = txt })
+    local active = {}
+
+    if settings.playerESP then
+        for _, plr in ipairs(players:GetPlayers()) do
+            if plr == localplayer then continue end
+            if plr.Name == localplayer.Name then continue end
+            if not plr.Character then continue end
+            local root = plr.Character:FindFirstChild("HumanoidRootPart")
+            if not root then continue end
+            local hum = plr.Character:FindFirstChild("Humanoid")
+            if not hum or hum.Health <= 0 then continue end
+            local ok, pos, vis = pcall(WorldToScreen, root.Position)
+            if not ok then continue end
+
+            if not playerESP[plr] then
+                playerESP[plr] = { t = newText(plr.Name, Color3.fromRGB(255, 255, 255)) }
+            end
+
+            local e = playerESP[plr]
+            e.t.Visible = vis
+            if vis then e.t.Position = pos - Vector2.new(0, 15) end
+            active[plr] = true
+        end
+    end
+
+    for plr, e in pairs(playerESP) do
+        if not active[plr] then
+            e.t:Remove()
+            playerESP[plr] = nil
+        end
     end
 end
 
 local function drawZombieSpawnESP()
-    clearESP(zombieSpawnESP)
-    if not settings.zombieSpawnESP then return end
     local spawnFolder = workspace:FindFirstChild("ZombieSpawns")
-    if not spawnFolder then return end
-    for _, spawn in ipairs(spawnFolder:GetChildren()) do
-        local part = spawn:FindFirstChild("Spawn Location") or (spawn:IsA("BasePart") and spawn) or nil
-        if not part or not part:IsA("BasePart") then continue end
-        local ok, pos, vis = pcall(WorldToScreen, part.Position)
-        if not ok then continue end
-        local txt = Drawing.new("Text")
-        txt.Text = "[Z-SPAWN]"
-        txt.Center = true txt.Outline = true
-        txt.Size = 14 txt.Color = Color3.fromRGB(255, 165, 0)
-        txt.Visible = vis
-        if vis then txt.Position = pos - Vector2.new(0, 15) end
-        table.insert(zombieSpawnESP, { p = part, t = txt })
+    local active = {}
+
+    if settings.zombieSpawnESP and spawnFolder then
+        for _, spawn in ipairs(spawnFolder:GetChildren()) do
+            local part = spawn:FindFirstChild("Spawn Location") or (spawn:IsA("BasePart") and spawn) or nil
+            if not part or not part:IsA("BasePart") then continue end
+            local ok, pos, vis = pcall(WorldToScreen, part.Position)
+            if not ok then continue end
+
+            if not zombieSpawnESP[part] then
+                zombieSpawnESP[part] = { t = newText("[Z-SPAWN]", Color3.fromRGB(255, 165, 0)) }
+            end
+
+            local e = zombieSpawnESP[part]
+            e.t.Visible = vis
+            if vis then e.t.Position = pos - Vector2.new(0, 15) end
+            active[part] = true
+        end
+    end
+
+    for part, e in pairs(zombieSpawnESP) do
+        if not active[part] then
+            e.t:Remove()
+            zombieSpawnESP[part] = nil
+        end
     end
 end
 
