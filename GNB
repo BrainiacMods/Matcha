@@ -1648,8 +1648,9 @@ end
 
 local function drawZombieSpawnESP()
     local active = {}
-    if settings.zombieSpawnESP and spawnFolder then
-        for _, spawn in ipairs(spawnFolder:GetChildren()) do
+    local sf = workspace:FindFirstChild("ZombieSpawns")
+    if settings.zombieSpawnESP and sf then
+        for _, spawn in ipairs(sf:GetChildren()) do
             local part = spawn:FindFirstChild("Spawn Location") or (spawn:IsA("BasePart") and spawn) or nil
             if not part or not part:IsA("BasePart") then continue end
             local ok, pos, vis = pcall(WorldToScreen, part.Position)
