@@ -1532,45 +1532,6 @@ end
 
 local zombieESP = {}
 local playerESP = {}
-local players = game:GetService("Players")
-local localplayer = players.LocalPlayer
-
-local settings = {
-    zombieESP = true,
-    playerESP = true,
-}
-
-print("[ESP] Script loaded!")
-
-UILib:SetMenuTitle("ESP Menu")
-UILib:SetMenuSize(Vector2.new(400, 480))
-UILib:CenterMenu()
-
-local espTab = UILib:Tab("ESP")
-local espSection = espTab:Section("Visuals")
-
-espSection:Toggle("Zombie ESP", settings.zombieESP, function(val)
-    settings.zombieESP = val
-    if not val then
-        for i = #zombieESP, 1, -1 do
-            zombieESP[i].t:Remove()
-            table.remove(zombieESP, i)
-        end
-    end
-end)
-
-espSection:Toggle("Player ESP", settings.playerESP, function(val)
-    settings.playerESP = val
-    if not val then
-        for i = #playerESP, 1, -1 do
-            playerESP[i].t:Remove()
-            table.remove(playerESP, i)
-        end
-    end
-end)
-
-local zombieESP = {}
-local playerESP = {}
 local zombieSpawnESP = {}
 local players = game:GetService("Players")
 local localplayer = players.LocalPlayer
@@ -1590,27 +1551,24 @@ local espSection = espTab:Section("Visuals")
 
 espSection:Toggle("Zombie ESP", settings.zombieESP, function(val)
     settings.zombieESP = val
-    if not val then
-        for _, e in pairs(zombieESP) do e.t.Visible = false end
-    end
+    if not val then for _, e in pairs(zombieESP) do e.t.Visible = false end end
 end)
 
 espSection:Toggle("Player ESP", settings.playerESP, function(val)
     settings.playerESP = val
-    if not val then
-        for _, e in pairs(playerESP) do e.t.Visible = false end
-    end
+    if not val then for _, e in pairs(playerESP) do e.t.Visible = false end end
 end)
 
 espSection:Toggle("Zombie Spawn ESP", settings.zombieSpawnESP, function(val)
     settings.zombieSpawnESP = val
-    if not val then
-        for _, e in pairs(zombieSpawnESP) do e.t.Visible = false end
-    end
+    if not val then for _, e in pairs(zombieSpawnESP) do e.t.Visible = false end end
 end)
 
 UILib:CreateSettingsTab()
 UILib:Notification("ESP Loaded! Press F1 to toggle menu", 6)
+
+local zombieFolder = workspace:FindFirstChild("Zombies")
+local spawnFolder = workspace:FindFirstChild("ZombieSpawns")
 
 local function getRoot(model)
     local p = model:FindFirstChild("HumanoidRootPart")
@@ -1633,7 +1591,6 @@ local function newText(text, color)
 end
 
 local function drawZombieESP()
-    local zombieFolder = workspace:FindFirstChild("Zombies")
     local active = {}
     if settings.zombieESP and zombieFolder then
         for _, m in ipairs(zombieFolder:GetChildren()) do
@@ -1690,7 +1647,6 @@ local function drawPlayerESP()
 end
 
 local function drawZombieSpawnESP()
-    local spawnFolder = workspace:FindFirstChild("ZombieSpawns")
     local active = {}
     if settings.zombieSpawnESP and spawnFolder then
         for _, spawn in ipairs(spawnFolder:GetChildren()) do
@@ -1715,17 +1671,10 @@ local function drawZombieSpawnESP()
     end
 end
 
-local spawnTick = 0
 while true do
     drawZombieESP()
     drawPlayerESP()
-
-    -- only update spawns every 2 seconds since they dont move
-    if os.clock() - spawnTick > 2 then
-        drawZombieSpawnESP()
-        spawnTick = os.clock()
-    end
-
+    drawZombieSpawnESP()
     UILib:Step()
-    task.wait(0.05)
+    task.wait(0.007)
 end
